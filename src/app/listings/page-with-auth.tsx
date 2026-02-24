@@ -1,22 +1,26 @@
-// Simplified listings page without authentication - Cedar Sells
+// Main listings page with filtering and access tiers - Cedar Sells
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Grid, List, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Grid, List, Loader2, AlertCircle, UserPlus } from 'lucide-react';
 
 import { Property, PropertyFilters as IPropertyFilters } from '@/types';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { PropertyFilters } from '@/components/property/PropertyFilters';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ListingsPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default function ListingsPage({ searchParams }: ListingsPageProps) {
+  const { user, isLoaded } = useUser();
+
   // State management
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +41,18 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
     maxSquareFeet: undefined,
   });
 
-  // Fetch properties (simplified - no auth required for now)
+  // Determine user access tier - no public access
+  const getUserAccessTier = () => {
+    if (!user) return null; // Require login
+
+    // Check if user is VIP (implement your VIP logic here)
+    const isVip = user.publicMetadata?.isVip || false;
+    return isVip ? 'vip' : 'registered';
+  };
+
+  const accessTier = getUserAccessTier();
+
+  // Fetch properties
   const fetchProperties = async (currentFilters: IPropertyFilters, offset = 0) => {
     try {
       setLoading(true);
@@ -94,10 +109,45 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
     fetchProperties(newFilters, 0);
   };
 
-  // Initial load
+  // Initial load - require login
   useEffect(() => {
-    fetchProperties(filters);
-  }, []);
+    if (isLoaded && accessTier) {
+      fetchProperties(filters);
+    }
+  }, [isLoaded, accessTier]);
+
+  // Login required notice
+  const renderLoginRequired = () => {
+    if (accessTier !== null) return null;
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-display font-bold text-gray-900 mb-4">
+              Members Only Access
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please sign in to view our exclusive investment property listings.
+            </p>
+            <div className="flex gap-3">
+              <Link href="/sign-in" className="flex-1">
+                <Button className="w-full">Sign In</Button>
+              </Link>
+              <Link href="/sign-up" className="flex-1">
+                <Button variant="outline" className="w-full">Register</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Show login screen if not authenticated
+  if (!accessTier) {
+    return renderLoginRequired();
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,36 +158,76 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
             {/* Logo and Navigation */}
             <div className="flex items-center gap-6">
               <Link href="/">
-                <div className="text-xl font-bold text-green-800">Cedar Sells</div>
+                <Image
+                  src={process.env.NEXT_PUBLIC_LOGO_URL || '/logo.png'}
+                  alt="Cedar Sells"
+                  width={200}
+                  height={50}
+                  className="h-8 w-auto"
+                />
               </Link>
 
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/listings" className="text-green-800 font-medium">
+                <Link href="/listings" className="text-cedar-green font-medium">
                   Properties
                 </Link>
-                <Link href="/about" className="text-gray-600 hover:text-green-800">
+                <Link href="/about" className="text-gray-600 hover:text-cedar-green">
                   About
                 </Link>
-                <Link href="/contact" className="text-gray-600 hover:text-green-800">
+                <Link href="/contact" className="text-gray-600 hover:text-cedar-green">
                   Contact
                 </Link>
               </nav>
+            </div>
+
+            {/* User Actions */}
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="hidden sm:inline-flex">
+                Access: {accessTier === 'registered' ? 'Member' : 'VIP'}
+              </Badge>
+
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 hidden sm:inline">
+                    Welcome, {user.firstName || user.emailAddresses[0].emailAddress}
+                  </span>
+                  <Link href="/profile">
+                    <Button variant="outline" size="sm">
+                      Profile
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link href="/sign-in">
+                    <Button variant="outline" size="sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <Button size="sm">
+                      Register
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Page Title */}
           <div className="mt-6">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="font-display text-3xl font-bold text-gray-900">
               Investment Properties
             </h1>
             <p className="text-gray-600 mt-2">
-              Discover profitable real estate opportunities in Lafayette, Baton Rouge, and surrounding areas
+              Discover profitable real estate opportunities in Lafayette, Baton Rouge, and surrounding Acadiana parishes
             </p>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filters Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
@@ -192,7 +282,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
             {/* Properties Grid/List */}
             {loading && properties.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-cedar-green" />
               </div>
             ) : properties.length > 0 ? (
               <>
@@ -246,19 +336,27 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
       </div>
 
       {/* Footer */}
-      <footer className="bg-green-800 text-white mt-16">
+      <footer className="bg-cedar-dark-green text-white mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl font-bold mb-2">Cedar Sells</div>
+              <Image
+                src={process.env.NEXT_PUBLIC_LOGO_WHITE_URL || '/logo-white.png'}
+                alt="Cedar Sells"
+                width={200}
+                height={50}
+                className="h-8 w-auto mb-2"
+              />
               <p className="text-sm text-gray-300">
                 Professional real estate investment opportunities in Louisiana
               </p>
             </div>
             <div className="text-right">
-              <p className="font-semibold">(337) 420-0375</p>
+              <p className="font-semibold">
+                {process.env.NEXT_PUBLIC_COMPANY_PHONE}
+              </p>
               <p className="text-sm text-gray-300">
-                cedarcashhomebuyers.com
+                {process.env.NEXT_PUBLIC_COMPANY_WEBSITE}
               </p>
             </div>
           </div>
