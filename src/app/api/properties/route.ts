@@ -8,7 +8,7 @@ import { DealType, Market, AccessTier, Property } from '@/types';
 // Transform Salesforce Left_Main__Transactions__c record to Property interface
 function transformSalesforceRecord(record: any): Property {
   // Determine deal type - default to wholesale for now
-  let dealType = 'wholesale';
+  let dealType = 'Wholesale';
 
   // Get property address components from real Salesforce fields
   const street = record.Left_Main__Street_Address__c || 'Address Not Available';
@@ -19,7 +19,7 @@ function transformSalesforceRecord(record: any): Property {
   return {
     id: record.Id,
     title: record.Name || `${street}, ${city}` || 'Property Listing',
-    dealType: dealType as 'flip' | 'wholesale' | 'rental',
+    dealType: dealType as DealType,
     market: getMarketFromCity(city) as Market,
     listPrice: 0, // Hidden for now - placeholder
     address: {
