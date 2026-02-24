@@ -35,10 +35,6 @@ class SalesforceClient {
     this.username = process.env.SALESFORCE_USERNAME || '';
     this.password = process.env.SALESFORCE_PASSWORD || '';
     this.securityToken = process.env.SALESFORCE_SECURITY_TOKEN || '';
-
-    if (!this.clientId || !this.clientSecret || !this.username || !this.password) {
-      throw new Error('Missing required Salesforce credentials in environment variables');
-    }
   }
 
   private async authenticate(): Promise<void> {
@@ -80,6 +76,11 @@ class SalesforceClient {
   }
 
   private async ensureAuthenticated(): Promise<void> {
+    // Check if credentials are configured
+    if (!this.clientId || !this.clientSecret || !this.username || !this.password) {
+      throw new Error('Salesforce credentials not configured. Please set SALESFORCE_CLIENT_ID, SALESFORCE_CLIENT_SECRET, SALESFORCE_USERNAME, and SALESFORCE_PASSWORD environment variables.');
+    }
+
     if (!this.accessToken || Date.now() >= this.tokenExpiry) {
       await this.authenticate();
     }
