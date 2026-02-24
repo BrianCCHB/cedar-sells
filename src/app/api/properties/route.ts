@@ -39,18 +39,18 @@ function transformSalesforceRecord(record: any): Property {
       {
         id: `${record.Id}-1`,
         url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800',
-        alt: 'Property photo',
+        altText: 'Property photo',
         order: 1,
       },
     ],
-    flipMetrics: dealType === 'flip' ? {
+    flipMetrics: dealType === 'Fix & Flip' ? {
       purchasePrice: 50000,
       estimatedRehabCost: 15000,
       afterRepairValue: 95000,
       spread: 5000,
       estimatedTimeline: 90,
     } : undefined,
-    rentalMetrics: dealType === 'rental' ? {
+    rentalMetrics: dealType === 'Rental' ? {
       monthlyRent: 1200, // Default estimate
       annualRent: 14400,
       capRate: 8.5,
