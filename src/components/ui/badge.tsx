@@ -1,4 +1,4 @@
-// Badge component for Cedar Cash Home Buyers
+// Badge component for Cedar Sells
 
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";

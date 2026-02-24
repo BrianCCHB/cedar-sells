@@ -1,4 +1,4 @@
-// Sign In page - Cedar Cash Home Buyers
+// Sign In page - Cedar Sells
 
 import { SignIn } from '@clerk/nextjs';
 

@@ -1,4 +1,4 @@
-// Salesforce REST API connection utilities for Cedar Cash Home Buyers
+// Salesforce REST API connection utilities for Cedar Sells
 
 import { SalesforceTransaction, PropertyFromSalesforce, PropertyImage, Property } from '@/types';
 

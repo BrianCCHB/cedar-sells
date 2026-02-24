@@ -15,20 +15,20 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Cedar Cash Home Buyers - Investment Properties",
+  title: "Cedar Sells - Investment Properties",
   description: "Discover profitable real estate investment opportunities in Lafayette, Baton Rouge, and surrounding Acadiana parishes. Fix & flip, wholesale, and rental properties available.",
-  keywords: "real estate investment, Lafayette Louisiana, Baton Rouge, fix and flip, wholesale, rental properties, Cedar Cash Home Buyers",
+  keywords: "real estate investment, Lafayette Louisiana, Baton Rouge, fix and flip, wholesale, rental properties, Cedar Sells",
   openGraph: {
-    title: "Cedar Cash Home Buyers - Investment Properties",
+    title: "Cedar Sells - Investment Properties",
     description: "Discover profitable real estate investment opportunities in Lafayette, Baton Rouge, and surrounding Acadiana parishes.",
     url: "https://cedarcashhomebuyers.com",
-    siteName: "Cedar Cash Home Buyers",
+    siteName: "Cedar Sells",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cedar Cash Home Buyers - Investment Properties",
+    title: "Cedar Sells - Investment Properties",
     description: "Discover profitable real estate investment opportunities in Lafayette, Baton Rouge, and surrounding Acadiana parishes.",
   },
   robots: {

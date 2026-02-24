@@ -1,4 +1,4 @@
-// Export all types for Cedar Cash Home Buyers property listings app
+// Export all types for Cedar Sells property listings app
 
 export * from './property';
 export * from './user';

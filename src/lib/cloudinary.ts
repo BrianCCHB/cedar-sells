@@ -1,4 +1,4 @@
-// Cloudinary utilities for image management - Cedar Cash Home Buyers
+// Cloudinary utilities for image management - Cedar Sells
 
 import { PropertyImage, CloudinaryUploadResponse } from '@/types';
 

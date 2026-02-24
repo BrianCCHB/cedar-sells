@@ -1,4 +1,4 @@
-// Sign Up page - Cedar Cash Home Buyers
+// Sign Up page - Cedar Sells
 
 import { SignUp } from '@clerk/nextjs';
 
@@ -8,7 +8,7 @@ export default function SignUpPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-display font-bold text-gray-900">
-            Join Cedar Cash Home Buyers
+            Join Cedar Sells
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Get access to exclusive investment properties in Lafayette and Baton Rouge

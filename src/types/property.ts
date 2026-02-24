@@ -1,4 +1,4 @@
-// Property and Transaction types for Cedar Cash Home Buyers
+// Property and Transaction types for Cedar Sells
 
 export type DealType = 'Fix & Flip' | 'Wholesale' | 'Rental';
 export type Market = 'Lafayette' | 'Baton Rouge' | 'Other';

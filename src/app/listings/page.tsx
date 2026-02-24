@@ -1,4 +1,4 @@
-// Main listings page with filtering and access tiers - Cedar Cash Home Buyers
+// Main listings page with filtering and access tiers - Cedar Sells
 
 'use client';
 
@@ -160,7 +160,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
               <Link href="/">
                 <Image
                   src={process.env.NEXT_PUBLIC_LOGO_URL || '/logo.png'}
-                  alt="Cedar Cash Home Buyers"
+                  alt="Cedar Sells"
                   width={200}
                   height={50}
                   className="h-8 w-auto"
@@ -342,7 +342,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
             <div>
               <Image
                 src={process.env.NEXT_PUBLIC_LOGO_WHITE_URL || '/logo-white.png'}
-                alt="Cedar Cash Home Buyers"
+                alt="Cedar Sells"
                 width={200}
                 height={50}
                 className="h-8 w-auto mb-2"

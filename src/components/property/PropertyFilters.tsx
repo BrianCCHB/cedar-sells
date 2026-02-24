@@ -1,4 +1,4 @@
-// PropertyFilters component for Cedar Cash Home Buyers
+// PropertyFilters component for Cedar Sells
 
 'use client';
 

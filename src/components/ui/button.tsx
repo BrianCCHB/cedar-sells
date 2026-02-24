@@ -1,4 +1,4 @@
-// Button component for Cedar Cash Home Buyers
+// Button component for Cedar Sells
 
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";

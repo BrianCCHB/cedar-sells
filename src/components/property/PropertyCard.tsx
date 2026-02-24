@@ -1,4 +1,4 @@
-// PropertyCard component with Swiper carousel - Cedar Cash Home Buyers
+// PropertyCard component with Swiper carousel - Cedar Sells
 
 'use client';
 

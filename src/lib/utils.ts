@@ -1,4 +1,4 @@
-// Utility functions for Cedar Cash Home Buyers
+// Utility functions for Cedar Sells
 
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";

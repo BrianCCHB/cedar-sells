@@ -1,4 +1,4 @@
-// API route for fetching properties from Salesforce - Cedar Cash Home Buyers
+// API route for fetching properties from Salesforce - Cedar Sells
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';

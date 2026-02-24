@@ -1,4 +1,4 @@
-// Clerk webhook handler for creating Salesforce Leads - Cedar Cash Home Buyers
+// Clerk webhook handler for creating Salesforce Leads - Cedar Sells
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';

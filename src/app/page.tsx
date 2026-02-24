@@ -1,4 +1,4 @@
-// Home page - redirects to listings - Cedar Cash Home Buyers
+// Home page - redirects to listings - Cedar Sells
 
 import { redirect } from 'next/navigation';
 

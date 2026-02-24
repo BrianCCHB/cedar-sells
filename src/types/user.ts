@@ -1,4 +1,4 @@
-// User and authentication types for Cedar Cash Home Buyers
+// User and authentication types for Cedar Sells
 
 import { AccessTier } from './property';
 

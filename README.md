@@ -1,10 +1,10 @@
-# Cedar Cash Home Buyers - Property Listings Platform
+# Cedar Sells - Property Investment Platform
 
-A Next.js web application for listing and managing investment properties for Cedar Cash Home Buyers, a real estate investment company in Lafayette, Louisiana.
+A Next.js web application for showcasing investment properties for Cedar Sells, a real estate investment company in Lafayette, Louisiana.
 
 ## 🏡 Overview
 
-This platform allows Cedar Cash Home Buyers to showcase their investment property portfolio with three tiers of access:
+This platform allows Cedar Sells to showcase their investment property portfolio with three tiers of access:
 
 - **Public**: View limited property information (teasers)
 - **Registered**: Full property details and exact addresses
@@ -176,7 +176,7 @@ src/
 
 ## 🎨 Branding
 
-Cedar Cash Home Buyers brand colors:
+Cedar Sells brand colors:
 - Primary Green: `#05622E`
 - Logo Green: `#019342`
 - Dark Green: `#044922`
@@ -236,11 +236,11 @@ Add all variables from `.env.local` to your Vercel project settings.
 
 For technical support or questions about this application:
 
-**Cedar Cash Home Buyers**
+**Cedar Sells**
 - Phone: (337) 420-0375
 - Website: [cedarcashhomebuyers.com](https://cedarcashhomebuyers.com)
 - Markets: Lafayette, Baton Rouge, and surrounding Acadiana parishes
 
 ## 📄 License
 
-This project is proprietary to Cedar Cash Home Buyers.
+This project is proprietary to Cedar Sells.
