@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 // Note: Now using direct Salesforce API calls instead of salesforceClient
-import { DealType, Market, AccessTier, Property } from '@/types';
+import { DealType, Market, AccessTier, Property, PropertyStatus } from '@/types';
 
 // Transform Salesforce Left_Main__Transactions__c record to Property interface
 function transformSalesforceRecord(record: any): Property {
@@ -22,6 +22,8 @@ function transformSalesforceRecord(record: any): Property {
     dealType: dealType as DealType,
     market: getMarketFromCity(city) as Market,
     listPrice: 0, // Hidden for now - placeholder
+    propertyType: 'Single Family', // Default property type
+    status: 'Available' as PropertyStatus,
     address: {
       street,
       city,
@@ -43,29 +45,24 @@ function transformSalesforceRecord(record: any): Property {
         order: 1,
       },
     ],
+    thumbnailUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400',
     flipMetrics: dealType === 'Fix & Flip' ? {
-      purchasePrice: 50000,
-      estimatedRehabCost: 15000,
-      afterRepairValue: 95000,
-      spread: 5000,
-      estimatedTimeline: 90,
+      arv: 95000, // After Repair Value
+      rehabEstimate: 15000,
+      spread: 5000, // ARV - (purchase price + rehab)
+      roi: 15.4, // Return on Investment percentage
     } : undefined,
     rentalMetrics: dealType === 'Rental' ? {
-      monthlyRent: 1200, // Default estimate
-      annualRent: 14400,
-      capRate: 8.5,
-      cashFlow: 400,
-      expenses: {
-        insurance: 100,
-        taxes: 200,
-        maintenance: 200,
-      },
+      grossYield: 8.5, // Annual rental income / purchase price
+      capRate: 7.2, // Net operating income / property value
+      monthlyRent: 1200,
     } : undefined,
-    isActive: true, // Default to active
     isOffMarket: record.Left_Main__Dispo_Status__c === 'Closed/Won',
     accessTier: 'registered' as AccessTier,
-    postedDate: record.CreatedDate ? new Date(record.CreatedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    // Salesforce fields
+    createdDate: record.CreatedDate ? new Date(record.CreatedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     updatedDate: record.LastModifiedDate ? new Date(record.LastModifiedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    ownerId: record.OwnerId || 'unknown',
   };
 }
 
@@ -209,7 +206,7 @@ export async function GET(request: NextRequest) {
 
       // Apply client-side filtering for deal types since it's not available in the object
       if (dealTypes.length > 0) {
-        properties = properties.filter(property => dealTypes.includes(property.dealType));
+        properties = properties.filter((property: Property) => dealTypes.includes(property.dealType));
       }
 
       return NextResponse.json({
