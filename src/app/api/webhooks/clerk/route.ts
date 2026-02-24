@@ -33,12 +33,16 @@ interface ClerkWebhookEvent {
 
 const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
-if (!WEBHOOK_SECRET) {
-  throw new Error('Please add CLERK_WEBHOOK_SECRET to your environment variables');
-}
-
 export async function POST(req: NextRequest) {
   try {
+    // Check if webhook secret is configured
+    if (!WEBHOOK_SECRET) {
+      return NextResponse.json(
+        { error: 'Webhook secret not configured' },
+        { status: 500 }
+      );
+    }
+
     // Get headers for webhook verification
     const headerPayload = req.headers;
     const svixId = headerPayload.get('svix-id');
