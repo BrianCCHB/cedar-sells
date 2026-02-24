@@ -1,4 +1,4 @@
-// Home page - Cedar Sells
+// Home page - Cedar Sells - Fixed deployment issues
 
 import Link from 'next/link';
 
