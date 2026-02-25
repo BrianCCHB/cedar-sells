@@ -22,12 +22,14 @@ class SalesforceClient {
   private accessToken: string | null = null;
   private instanceUrl: string | null = null;
   private tokenExpiry: number = 0;
+  private refreshToken: string | null = null;
 
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly username: string;
   private readonly password: string;
   private readonly securityToken: string;
+  private readonly sessionId: string;
 
   constructor() {
     this.clientId = process.env.SALESFORCE_CLIENT_ID || '';
@@ -35,17 +37,20 @@ class SalesforceClient {
     this.username = process.env.SALESFORCE_USERNAME || '';
     this.password = process.env.SALESFORCE_PASSWORD || '';
     this.securityToken = process.env.SALESFORCE_SECURITY_TOKEN || '';
+    this.sessionId = process.env.SALESFORCE_SESSION_ID || '';
   }
 
   private async authenticate(): Promise<void> {
-    const authUrl = 'https://login.salesforce.com/services/oauth2/token';
+    // Use the custom domain from instance URL or fallback to login.salesforce.com
+    const domain = this.instanceUrl ? new URL(this.instanceUrl).origin : 'https://cedarproperties.my.salesforce.com';
+    const authUrl = `${domain}/services/oauth2/token`;
 
     const params = new URLSearchParams({
       grant_type: 'password',
       client_id: this.clientId,
       client_secret: this.clientSecret,
       username: this.username,
-      password: this.password + this.securityToken,
+      password: this.password + (this.securityToken || ''),
     });
 
     try {
@@ -75,10 +80,75 @@ class SalesforceClient {
     }
   }
 
+  // Set tokens from OAuth2 cookies
+  setTokensFromCookies(accessToken: string, refreshToken: string, instanceUrl: string): void {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+    this.instanceUrl = instanceUrl;
+    this.tokenExpiry = Date.now() + (60 * 60 * 1000); // 1 hour (conservative)
+  }
+
+  // Refresh access token using refresh token
+  private async refreshAccessToken(): Promise<void> {
+    if (!this.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const tokenUrl = 'https://cedarproperties.my.salesforce.com/services/oauth2/token';
+
+    const params = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      refresh_token: this.refreshToken
+    });
+
+    try {
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Token refresh failed: ${error}`);
+      }
+
+      const tokenData = await response.json();
+      this.accessToken = tokenData.access_token;
+      this.instanceUrl = tokenData.instance_url;
+      this.tokenExpiry = Date.now() + (60 * 60 * 1000); // 1 hour
+
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      throw error;
+    }
+  }
+
   private async ensureAuthenticated(): Promise<void> {
-    // Check if credentials are configured
+    // If we have OAuth tokens, check if they need refresh
+    if (this.accessToken && this.refreshToken) {
+      if (Date.now() >= this.tokenExpiry) {
+        await this.refreshAccessToken();
+      }
+      return;
+    }
+
+    // If session ID is provided, use it directly
+    if (this.sessionId) {
+      this.accessToken = this.sessionId;
+      this.instanceUrl = 'https://cedarproperties.my.salesforce.com';
+      this.tokenExpiry = Date.now() + (24 * 60 * 60 * 1000); // Session IDs typically last 24 hours
+      console.log('Using Salesforce Session ID for authentication');
+      return;
+    }
+
+    // Check if credentials are configured for OAuth flow
     if (!this.clientId || !this.clientSecret || !this.username || !this.password) {
-      throw new Error('Salesforce credentials not configured. Please set SALESFORCE_CLIENT_ID, SALESFORCE_CLIENT_SECRET, SALESFORCE_USERNAME, and SALESFORCE_PASSWORD environment variables.');
+      throw new Error('Salesforce credentials not configured. Please set either SALESFORCE_SESSION_ID or (SALESFORCE_CLIENT_ID, SALESFORCE_CLIENT_SECRET, SALESFORCE_USERNAME, and SALESFORCE_PASSWORD) environment variables.');
     }
 
     if (!this.accessToken || Date.now() >= this.tokenExpiry) {

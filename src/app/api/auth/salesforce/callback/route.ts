@@ -1,97 +1,98 @@
-// Salesforce OAuth Web Server Flow authentication handler
+// Salesforce OAuth2 callback handler - Cedar Sells
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
+  const state = searchParams.get('state');
   const error = searchParams.get('error');
 
+  // Handle OAuth errors
   if (error) {
     console.error('Salesforce OAuth error:', error);
-    return NextResponse.redirect(new URL('/listings?error=salesforce_auth_failed', request.url));
+    return NextResponse.redirect(new URL('/listings?error=auth_failed', request.url));
   }
 
   if (!code) {
-    console.error('No authorization code received from Salesforce');
-    return NextResponse.redirect(new URL('/listings?error=no_auth_code', request.url));
+    console.error('No authorization code received');
+    return NextResponse.redirect(new URL('/listings?error=no_code', request.url));
   }
 
   try {
-    // Get PKCE code verifier from cookie
-    const codeVerifier = request.cookies.get('pkce_verifier')?.value;
-
-    if (!codeVerifier) {
-      console.error('Missing PKCE code verifier');
-      return NextResponse.redirect(new URL('/listings?error=missing_verifier', request.url));
-    }
-
     // Exchange authorization code for access token
-    const tokenUrl = 'https://login.salesforce.com/services/oauth2/token';
-    const callbackUrl = 'https://216a-76-72-80-29.ngrok-free.app/api/auth/salesforce/callback';
+    const tokenResponse = await exchangeCodeForToken(code);
 
-    const params = new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: process.env.SALESFORCE_CLIENT_ID!,
-      client_secret: process.env.SALESFORCE_CLIENT_SECRET!,
-      redirect_uri: callbackUrl,
-      code: code,
-      code_verifier: codeVerifier,
-    });
+    // Get redirect URI from cookie
+    const redirectUri = request.cookies.get('sf_redirect_uri')?.value || '/listings';
 
-    const fetchResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
+    // Create response with redirect
+    const response = NextResponse.redirect(new URL(redirectUri, request.url));
 
-    if (!fetchResponse.ok) {
-      const errorText = await fetchResponse.text();
-      console.error('Token exchange failed:', errorText);
-      return NextResponse.redirect(new URL('/listings?error=token_exchange_failed', request.url));
-    }
+    // Set secure cookies for tokens
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    const tokenData = await fetchResponse.json();
-
-    // Store tokens securely (in a real app, you'd store this in a database or secure session)
-    console.log('Salesforce authentication successful:', {
-      access_token: tokenData.access_token.substring(0, 20) + '...',
-      instance_url: tokenData.instance_url,
-    });
-
-    // Create a response that stores tokens in secure cookies for this demo
-    const redirectResponse = NextResponse.redirect(new URL('/listings?salesforce_connected=true', request.url));
-
-    // Store tokens in secure HttpOnly cookies (for demo purposes)
-    redirectResponse.cookies.set('sf_access_token', tokenData.access_token, {
+    response.cookies.set('sf_access_token', tokenResponse.access_token, {
       httpOnly: true,
-      secure: true,
-      maxAge: 7200, // 2 hours (Salesforce token expiry)
-      path: '/'
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2 // 2 hours
     });
 
-    redirectResponse.cookies.set('sf_instance_url', tokenData.instance_url, {
+    response.cookies.set('sf_refresh_token', tokenResponse.refresh_token, {
       httpOnly: true,
-      secure: true,
-      maxAge: 7200,
-      path: '/'
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30 // 30 days
     });
 
-    if (tokenData.refresh_token) {
-      redirectResponse.cookies.set('sf_refresh_token', tokenData.refresh_token, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 86400 * 30, // 30 days
-        path: '/'
-      });
-    }
+    response.cookies.set('sf_instance_url', tokenResponse.instance_url, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30 // 30 days
+    });
 
-    return redirectResponse;
+    // Clear the redirect URI cookie
+    response.cookies.delete('sf_redirect_uri');
+
+    return response;
 
   } catch (error) {
-    console.error('Error during token exchange:', error);
-    return NextResponse.redirect(new URL('/listings?error=auth_server_error', request.url));
+    console.error('Token exchange failed:', error);
+    return NextResponse.redirect(new URL('/listings?error=token_exchange_failed', request.url));
   }
+}
+
+async function exchangeCodeForToken(code: string) {
+  const clientId = process.env.SALESFORCE_CLIENT_ID;
+  const clientSecret = process.env.SALESFORCE_CLIENT_SECRET;
+  const redirectUri = process.env.NODE_ENV === 'production'
+    ? 'https://cedar-property-listings.vercel.app/api/auth/salesforce/callback'
+    : 'http://localhost:3000/api/auth/salesforce/callback';
+
+  const tokenUrl = 'https://cedarproperties.my.salesforce.com/services/oauth2/token';
+
+  const params = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: clientId || '',
+    client_secret: clientSecret || '',
+    redirect_uri: redirectUri,
+    code: code
+  });
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Token exchange failed: ${error}`);
+  }
+
+  return response.json();
 }

@@ -123,6 +123,16 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
                 </Link>
               </nav>
             </div>
+
+            {/* Auth Button */}
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => window.location.href = '/api/auth/salesforce'}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Connect to Salesforce
+              </Button>
+            </div>
           </div>
 
           {/* Page Title */}

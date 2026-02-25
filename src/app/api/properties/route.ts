@@ -130,7 +130,81 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get Salesforce tokens from cookies
+    // Check for OAuth2 tokens in cookies
+    const accessToken = request.cookies.get('sf_access_token')?.value;
+    const refreshToken = request.cookies.get('sf_refresh_token')?.value;
+    const instanceUrl = request.cookies.get('sf_instance_url')?.value;
+
+    // Try to use Salesforce client directly first
+    try {
+      const { salesforceClient } = await import('@/lib/salesforce');
+
+      // If we have OAuth2 tokens, use them
+      if (accessToken && refreshToken && instanceUrl) {
+        salesforceClient.setTokensFromCookies(accessToken, refreshToken, instanceUrl);
+      }
+
+      const salesforceData = await salesforceClient.queryTransactions({
+        dealTypes: dealTypes as any,
+        markets: markets as any,
+        limit,
+        offset
+      });
+
+      if (salesforceData.records && salesforceData.records.length > 0) {
+        const properties = salesforceData.records.map((record: any) => ({
+          id: record.Id,
+          title: record.Name || `Property ${record.Id}`,
+          dealType: 'Wholesale' as DealType, // Default since we don't have Deal_Type__c
+          market: 'lafayette' as Market, // Default market
+          listPrice: 75000, // Default price
+          propertyType: 'Single Family',
+          status: 'Available' as PropertyStatus,
+          address: {
+            street: record.Left_Main__Street_Address__c || 'Address Not Available',
+            city: record.Left_Main__City__c || 'Lafayette',
+            state: record.Left_Main__State__c || 'LA',
+            zipCode: record.Left_Main__Zipcode__c || '',
+            parish: 'Lafayette',
+          },
+          bedrooms: 3,
+          bathrooms: 2,
+          squareFeet: 1200,
+          lotSize: 0.25,
+          yearBuilt: 1990,
+          description: `Real estate investment opportunity. ${record.Left_Main__Dispo_Status__c ? `Status: ${record.Left_Main__Dispo_Status__c}` : ''}`,
+          images: [
+            {
+              id: `${record.Id}-1`,
+              url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800',
+              altText: 'Property photo',
+              order: 1,
+            },
+          ],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400',
+          isOffMarket: false,
+          accessTier: 'public' as AccessTier,
+          createdDate: record.CreatedDate ? new Date(record.CreatedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          updatedDate: record.LastModifiedDate ? new Date(record.LastModifiedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          ownerId: record.OwnerId || 'cedar-sells',
+        }));
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            properties,
+            totalCount: salesforceData.totalSize,
+            hasMore: !salesforceData.done,
+            message: 'Live data from Salesforce'
+          },
+        });
+      }
+    } catch (salesforceError) {
+      console.error('Salesforce client error:', salesforceError);
+      // Fall through to mock data
+    }
+
+    // Get Salesforce tokens from cookies as fallback
     const accessToken = request.cookies.get('sf_access_token')?.value;
     const instanceUrl = request.cookies.get('sf_instance_url')?.value;
 
