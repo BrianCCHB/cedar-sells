@@ -38,7 +38,9 @@ function getSalesforceAuthUrl(codeChallenge: string): string {
   console.log('Environment variables check:', {
     NODE_ENV: process.env.NODE_ENV,
     CLIENT_ID_EXISTS: !!clientId,
-    CLIENT_ID_LENGTH: clientId?.length || 0
+    CLIENT_ID_LENGTH: clientId?.length || 0,
+    CLIENT_ID_PREVIEW: clientId?.substring(0, 10) + '...',
+    ALL_SALESFORCE_VARS: Object.keys(process.env).filter(key => key.startsWith('SALESFORCE'))
   });
 
   const redirectUri = process.env.NODE_ENV === 'production'
@@ -47,9 +49,14 @@ function getSalesforceAuthUrl(codeChallenge: string): string {
 
   const baseUrl = 'https://cedarproperties.my.salesforce.com/services/oauth2/authorize';
 
+  // Throw error if client ID is missing
+  if (!clientId) {
+    throw new Error('SALESFORCE_CLIENT_ID environment variable is not set');
+  }
+
   const params = new URLSearchParams({
     response_type: 'code',
-    client_id: clientId || '',
+    client_id: clientId,
     redirect_uri: redirectUri,
     scope: 'full refresh_token',
     state: generateRandomState(),
