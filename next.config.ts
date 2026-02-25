@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    SALESFORCE_CLIENT_ID: process.env.SALESFORCE_CLIENT_ID,
+    SALESFORCE_CLIENT_SECRET: process.env.SALESFORCE_CLIENT_SECRET,
+  },
 };
 
 export default nextConfig;
