@@ -204,10 +204,7 @@ export async function GET(request: NextRequest) {
       // Fall through to mock data
     }
 
-    // Get Salesforce tokens from cookies as fallback
-    const accessToken = request.cookies.get('sf_access_token')?.value;
-    const instanceUrl = request.cookies.get('sf_instance_url')?.value;
-
+    // If Salesforce client failed, fall back to mock data
     if (!accessToken || !instanceUrl) {
       // Fall back to mock data if no Salesforce tokens
       console.log('No Salesforce tokens found, using mock data');
