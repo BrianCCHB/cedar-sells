@@ -1,7 +1,7 @@
 // API route for fetching properties from Salesforce - Cedar Sells
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+// import { auth } from '@clerk/nextjs/server';
 // Note: Now using direct Salesforce API calls instead of salesforceClient
 import { DealType, Market, AccessTier, Property, PropertyStatus } from '@/types';
 
@@ -105,7 +105,8 @@ function calculateCapRate(monthlyRent: number, purchasePrice: number): number {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    // const { userId } = await auth();
+    const userId = null; // Temporarily disable auth for demo
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -136,13 +137,148 @@ export async function GET(request: NextRequest) {
     if (!accessToken || !instanceUrl) {
       // Fall back to mock data if no Salesforce tokens
       console.log('No Salesforce tokens found, using mock data');
+
+      // Create sample properties for demo
+      const sampleProperties: Property[] = [
+        {
+          id: 'sample-1',
+          title: '123 Oak Street, Lafayette',
+          dealType: 'Fix & Flip' as DealType,
+          market: 'lafayette' as Market,
+          listPrice: 75000,
+          propertyType: 'Single Family',
+          status: 'Available' as PropertyStatus,
+          address: {
+            street: '123 Oak Street',
+            city: 'Lafayette',
+            state: 'LA',
+            zipCode: '70501',
+            parish: 'Lafayette',
+          },
+          bedrooms: 3,
+          bathrooms: 2,
+          squareFeet: 1200,
+          lotSize: 0.25,
+          yearBuilt: 1990,
+          description: 'Great investment property in desirable Lafayette neighborhood. Perfect for fix and flip opportunity.',
+          images: [
+            {
+              id: 'sample-1-1',
+              url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800',
+              altText: 'Property photo',
+              order: 1,
+            },
+          ],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400',
+          flipMetrics: {
+            arv: 95000,
+            rehabEstimate: 15000,
+            spread: 5000,
+            roi: 15.4,
+          },
+          isOffMarket: false,
+          accessTier: 'public' as AccessTier,
+          createdDate: new Date().toISOString().split('T')[0],
+          updatedDate: new Date().toISOString().split('T')[0],
+          ownerId: 'cedar-sells',
+        },
+        {
+          id: 'sample-2',
+          title: '456 Pine Avenue, Baton Rouge',
+          dealType: 'Rental' as DealType,
+          market: 'baton-rouge' as Market,
+          listPrice: 120000,
+          propertyType: 'Single Family',
+          status: 'Available' as PropertyStatus,
+          address: {
+            street: '456 Pine Avenue',
+            city: 'Baton Rouge',
+            state: 'LA',
+            zipCode: '70802',
+            parish: 'East Baton Rouge',
+          },
+          bedrooms: 3,
+          bathrooms: 2,
+          squareFeet: 1400,
+          lotSize: 0.30,
+          yearBuilt: 2005,
+          description: 'Excellent rental property in growing Baton Rouge area. Currently rented at market rate.',
+          images: [
+            {
+              id: 'sample-2-1',
+              url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800',
+              altText: 'Property photo',
+              order: 1,
+            },
+          ],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400',
+          rentalMetrics: {
+            grossYield: 8.5,
+            capRate: 7.2,
+            monthlyRent: 1200,
+          },
+          isOffMarket: false,
+          accessTier: 'public' as AccessTier,
+          createdDate: new Date().toISOString().split('T')[0],
+          updatedDate: new Date().toISOString().split('T')[0],
+          ownerId: 'cedar-sells',
+        },
+        {
+          id: 'sample-3',
+          title: '789 Cypress Lane, Lafayette',
+          dealType: 'Wholesale' as DealType,
+          market: 'lafayette' as Market,
+          listPrice: 65000,
+          propertyType: 'Single Family',
+          status: 'Available' as PropertyStatus,
+          address: {
+            street: '789 Cypress Lane',
+            city: 'Lafayette',
+            state: 'LA',
+            zipCode: '70503',
+            parish: 'Lafayette',
+          },
+          bedrooms: 2,
+          bathrooms: 1,
+          squareFeet: 900,
+          lotSize: 0.20,
+          yearBuilt: 1985,
+          description: 'Wholesale opportunity in Lafayette. Quick close available for cash buyers.',
+          images: [
+            {
+              id: 'sample-3-1',
+              url: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800',
+              altText: 'Property photo',
+              order: 1,
+            },
+          ],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400',
+          isOffMarket: false,
+          accessTier: 'public' as AccessTier,
+          createdDate: new Date().toISOString().split('T')[0],
+          updatedDate: new Date().toISOString().split('T')[0],
+          ownerId: 'cedar-sells',
+        },
+      ];
+
+      // Apply filters to sample data
+      let filteredProperties = sampleProperties;
+
+      if (dealTypes.length > 0) {
+        filteredProperties = filteredProperties.filter(prop => dealTypes.includes(prop.dealType));
+      }
+
+      if (markets.length > 0) {
+        filteredProperties = filteredProperties.filter(prop => markets.includes(prop.market));
+      }
+
       return NextResponse.json({
         success: true,
         data: {
-          properties: [],
-          totalCount: 0,
-          hasMore: false,
-          message: 'Please authenticate with Salesforce to view properties'
+          properties: filteredProperties.slice(offset, offset + limit),
+          totalCount: filteredProperties.length,
+          hasMore: (offset + limit) < filteredProperties.length,
+          message: 'Demo properties - Connect Salesforce for live data'
         },
       });
     }
