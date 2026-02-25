@@ -20,8 +20,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Get code verifier from cookie
+    const codeVerifier = request.cookies.get('sf_code_verifier')?.value;
+    if (!codeVerifier) {
+      console.error('No code verifier found in cookies');
+      return NextResponse.redirect(new URL('/listings?error=no_verifier', request.url));
+    }
+
     // Exchange authorization code for access token
-    const tokenResponse = await exchangeCodeForToken(code);
+    const tokenResponse = await exchangeCodeForToken(code, codeVerifier);
 
     // Get redirect URI from cookie
     const redirectUri = request.cookies.get('sf_redirect_uri')?.value || '/listings';
@@ -53,8 +60,9 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 30 // 30 days
     });
 
-    // Clear the redirect URI cookie
+    // Clear the redirect URI and code verifier cookies
     response.cookies.delete('sf_redirect_uri');
+    response.cookies.delete('sf_code_verifier');
 
     return response;
 
@@ -64,7 +72,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function exchangeCodeForToken(code: string) {
+async function exchangeCodeForToken(code: string, codeVerifier: string) {
   const clientId = process.env.SALESFORCE_CLIENT_ID;
   const clientSecret = process.env.SALESFORCE_CLIENT_SECRET;
   const redirectUri = process.env.NODE_ENV === 'production'
@@ -78,7 +86,8 @@ async function exchangeCodeForToken(code: string) {
     client_id: clientId || '',
     client_secret: clientSecret || '',
     redirect_uri: redirectUri,
-    code: code
+    code: code,
+    code_verifier: codeVerifier
   });
 
   const response = await fetch(tokenUrl, {
