@@ -33,6 +33,14 @@ export async function GET(request: NextRequest) {
 
 function getSalesforceAuthUrl(codeChallenge: string): string {
   const clientId = process.env.SALESFORCE_CLIENT_ID;
+
+  // Debug logging for production
+  console.log('Environment variables check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    CLIENT_ID_EXISTS: !!clientId,
+    CLIENT_ID_LENGTH: clientId?.length || 0
+  });
+
   const redirectUri = process.env.NODE_ENV === 'production'
     ? 'https://cedar-property-listings.vercel.app/api/auth/salesforce/callback'
     : 'http://localhost:3000/api/auth/salesforce/callback';
