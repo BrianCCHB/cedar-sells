@@ -1,17 +1,30 @@
 // Database configuration and connection
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Lazy Supabase clients - only initialized when first used
+let _supabase: SupabaseClient | null = null;
+let _supabaseAdmin: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) throw new Error('Supabase environment variables not configured');
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
-// For server-side operations with service role key
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin(): SupabaseClient {
+  if (!_supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Supabase admin environment variables not configured');
+    _supabaseAdmin = createClient(url, key);
+  }
+  return _supabaseAdmin;
+}
+
 
 // Property interface matching Salesforce data
 export interface Property {
@@ -50,7 +63,7 @@ export class PropertyDatabase {
 
   // Get all properties with optional tier filtering
   static async getProperties(tier?: string, limit: number = 50): Promise<Property[]> {
-    let query = supabase
+    let query = getSupabase()
       .from('properties')
       .select('*')
       .eq('status', 'Active')
@@ -112,7 +125,7 @@ export class PropertyDatabase {
 
   // Get single property by ID
   static async getProperty(id: string): Promise<Property | null> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('properties')
       .select('*')
       .eq('id', id)
@@ -160,7 +173,7 @@ export class PropertyDatabase {
       salesforce_status: prop.salesforceStatus
     }));
 
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('properties')
       .upsert(dbProperties, {
         onConflict: 'salesforce_id',
@@ -177,7 +190,7 @@ export class PropertyDatabase {
 
   // Get sync status
   static async getLastSyncTime(): Promise<string | null> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('sync_status')
       .select('last_sync_at')
       .single();
@@ -191,7 +204,7 @@ export class PropertyDatabase {
 
   // Update sync status
   static async updateSyncStatus(): Promise<void> {
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('sync_status')
       .upsert({
         id: 1,
