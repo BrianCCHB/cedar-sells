@@ -62,7 +62,7 @@ export interface Property {
 export class PropertyDatabase {
 
   // Get all properties with optional tier filtering
-  static async getProperties(tier?: string, limit: number = 50): Promise<Property[]> {
+  static async getProperties(tier?: string, limit: number = 20, offset: number = 0): Promise<Property[]> {
     let query = getSupabase()
       .from('properties')
       .select('*')
@@ -83,7 +83,7 @@ export class PropertyDatabase {
       query = query.eq('tier', 'public');
     }
 
-    const { data, error } = await query.limit(limit);
+    const { data, error } = await query.range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Error fetching properties:', error);

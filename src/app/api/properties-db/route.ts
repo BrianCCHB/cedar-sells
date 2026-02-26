@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Get query parameters
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = parseInt(searchParams.get('offset') || '0');
     const tier = searchParams.get('tier') || 'public';
 
     // Get user authentication status
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     console.log(`Fetching properties for tier: ${effectiveTier} (user: ${userTier}, requested: ${tier})`);
 
     // Fetch properties from database
-    const properties = await PropertyDatabase.getProperties(effectiveTier, limit);
+    const properties = await PropertyDatabase.getProperties(effectiveTier, limit, offset);
 
     // Get last sync time
     const lastSync = await PropertyDatabase.getLastSyncTime();
