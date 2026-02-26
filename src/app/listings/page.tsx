@@ -7,8 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Grid, List, Loader2, AlertCircle } from 'lucide-react';
 
-import { Property, PropertyFilters as IPropertyFilters } from '@/types';
-import { PropertyCard } from '@/components/property/PropertyCard';
+import { PropertyFilters as IPropertyFilters } from '@/types';
+import { Property } from '@/lib/database';
+import { PropertyCard } from '@/components/property/PropertyCard.new';
 import { PropertyFilters } from '@/components/property/PropertyFilters';
 import { Button } from '@/components/ui/button';
 
@@ -56,7 +57,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
       params.append('limit', '20');
       params.append('offset', offset.toString());
 
-      const response = await fetch(`/api/properties?${params.toString()}`);
+      const response = await fetch(`/api/properties-db?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
@@ -126,12 +127,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
 
             {/* Auth Button */}
             <div className="flex items-center gap-4">
-              <Button
-                onClick={() => window.location.href = '/api/auth/salesforce'}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Connect to Salesforce
-              </Button>
+              {/* Database-backed properties - no Salesforce connection needed */}
             </div>
           </div>
 
@@ -143,6 +139,40 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
             <p className="text-gray-600 mt-2">
               Discover profitable real estate opportunities in Lafayette, Baton Rouge, and surrounding areas
             </p>
+
+            {/* Success Stats for Social Proof */}
+            {properties.length > 0 && (
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-green-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {properties.filter(p => p.status === 'Sold').length}
+                  </div>
+                  <div className="text-sm text-green-700">Properties Sold</div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {properties.filter(p => p.status !== 'Sold').length}
+                  </div>
+                  <div className="text-sm text-blue-700">Available Now</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {properties.filter(p => p.actualProfit && p.actualProfit > 0).length}
+                  </div>
+                  <div className="text-sm text-orange-700">Profitable Deals</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    ${Math.round(
+                      properties
+                        .filter(p => p.actualProfit && p.actualProfit > 0)
+                        .reduce((sum, p) => sum + (p.actualProfit || 0), 0) / 1000
+                    )}K
+                  </div>
+                  <div className="text-sm text-purple-700">Total Profit</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
