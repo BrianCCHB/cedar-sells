@@ -275,6 +275,50 @@ class SalesforceClient {
       body: JSON.stringify(updateData),
     });
   }
+
+  // Method to authenticate with username/password for sync operations
+  async authenticateWithCredentials(username: string, passwordAndToken: string): Promise<void> {
+    const domain = 'https://cedarproperties.my.salesforce.com';
+    const authUrl = `${domain}/services/oauth2/token`;
+
+    const params = new URLSearchParams({
+      grant_type: 'password',
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      username: username,
+      password: passwordAndToken
+    });
+
+    try {
+      const response = await fetch(authUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Salesforce authentication failed: ${error}`);
+      }
+
+      const tokenData: SalesforceAuthResponse = await response.json();
+      this.accessToken = tokenData.access_token;
+      this.instanceUrl = tokenData.instance_url;
+      this.tokenExpiry = Date.now() + (60 * 60 * 1000); // 1 hour
+
+      console.log('Successfully authenticated with Salesforce');
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      throw error;
+    }
+  }
+
+  // Generic query method for custom SOQL
+  async query(soqlQuery: string): Promise<SalesforceQueryResponse<any>> {
+    return this.makeRequest(`/query/?q=${encodeURIComponent(soqlQuery)}`);
+  }
 }
 
 // Transform Salesforce Transaction to our Property interface
