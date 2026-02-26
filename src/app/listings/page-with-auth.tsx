@@ -71,7 +71,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
       params.append('limit', '20');
       params.append('offset', offset.toString());
 
-      const response = await fetch(`/api/properties?${params.toString()}`);
+      const response = await fetch(`/api/properties-db?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch properties');

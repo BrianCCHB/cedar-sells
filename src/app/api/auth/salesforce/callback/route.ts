@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
 }
 
 async function exchangeCodeForToken(code: string, codeVerifier: string) {
-  const clientId = process.env.SALESFORCE_CLIENT_ID;
-  const clientSecret = process.env.SALESFORCE_CLIENT_SECRET;
+  const clientId = process.env.SALESFORCE_CLIENT_ID?.trim();
+  const clientSecret = process.env.SALESFORCE_CLIENT_SECRET?.trim();
   const redirectUri = process.env.NODE_ENV === 'production'
     ? 'https://cedar-property-listings.vercel.app/api/auth/salesforce/callback'
     : 'http://localhost:3000/api/auth/salesforce/callback';

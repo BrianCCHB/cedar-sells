@@ -2,6 +2,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const redirectUri = searchParams.get('redirect') || '/listings';
@@ -32,15 +34,23 @@ export async function GET(request: NextRequest) {
 }
 
 function getSalesforceAuthUrl(codeChallenge: string): string {
-  const clientId = process.env.SALESFORCE_CLIENT_ID;
+  // Environment variables are now accessible in production
+  const clientId = process.env.SALESFORCE_CLIENT_ID?.trim();
 
-  // Debug logging for production
+  // Debug logging for production - show all environment variables
   console.log('Environment variables check:', {
     NODE_ENV: process.env.NODE_ENV,
     CLIENT_ID_EXISTS: !!clientId,
     CLIENT_ID_LENGTH: clientId?.length || 0,
     CLIENT_ID_PREVIEW: clientId?.substring(0, 10) + '...',
-    ALL_SALESFORCE_VARS: Object.keys(process.env).filter(key => key.startsWith('SALESFORCE'))
+    ALL_SALESFORCE_VARS: Object.keys(process.env).filter(key => key.startsWith('SALESFORCE')),
+    ALL_ENV_KEYS: Object.keys(process.env).sort(),
+    PROCESS_ENV_KEYS: Object.keys(process.env).length,
+    GLOBAL_PROCESS: typeof (globalThis as any).process,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL: process.env.VERCEL,
+    VERCEL_URL: process.env.VERCEL_URL,
+    NODE_VERSION: process.env.NODE_VERSION
   });
 
   const redirectUri = process.env.NODE_ENV === 'production'
